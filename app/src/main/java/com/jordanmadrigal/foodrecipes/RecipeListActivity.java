@@ -1,5 +1,8 @@
 package com.jordanmadrigal.foodrecipes;
 
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
+import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -12,6 +15,7 @@ import com.jordanmadrigal.foodrecipes.requests.RecipeApi;
 import com.jordanmadrigal.foodrecipes.requests.ServiceGenerator;
 import com.jordanmadrigal.foodrecipes.requests.responses.RecipeSearchResponse;
 import com.jordanmadrigal.foodrecipes.utils.Constants;
+import com.jordanmadrigal.foodrecipes.viewmodels.RecipeListViewModel;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,22 +28,22 @@ import retrofit2.Response;
 public class RecipeListActivity extends BaseActivity {
 
     private static final String TAG = "RecipeListActivity";
+    private RecipeListViewModel recipeListViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recipe_list);
-        
-        Button button = findViewById(R.id.test);
-        button.setOnClickListener(new View.OnClickListener() {
+
+        recipeListViewModel = ViewModelProviders.of(this).get(RecipeListViewModel.class);
+        subscribeObservers();
+    }
+
+    private void subscribeObservers(){
+        recipeListViewModel.getRecipes().observe(this, new Observer<List<Recipe>>() {
             @Override
-            public void onClick(View v) {
-                testRetrofitRequest();
-                /*if(progressBar.getVisibility() == View.VISIBLE){
-                    showProgressBar(false);
-                }else{
-                    showProgressBar(true);
-                }*/
+            public void onChanged(@Nullable List<Recipe> recipes) {
+
             }
         });
     }
