@@ -28,4 +28,11 @@ public class RecipeRepository {
         return recipeApiClient.getRecipes();
     }
 
+    public void searchRecipesApi(String query, int pageNumber){
+        if(pageNumber == 0){
+            pageNumber = 1;
+        }
+        recipeApiClient.searchRecipesApi(query, pageNumber);
+    }
+
 }
