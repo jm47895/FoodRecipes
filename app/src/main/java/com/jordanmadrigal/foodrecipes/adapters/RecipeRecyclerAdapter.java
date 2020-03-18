@@ -18,8 +18,7 @@ public class RecipeRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.Vie
     private List<Recipe> recipes;
     private OnRecipeListener onRecipeListener;
 
-    public RecipeRecyclerAdapter(List<Recipe> recipes, OnRecipeListener onRecipeListener) {
-        this.recipes = recipes;
+    public RecipeRecyclerAdapter(OnRecipeListener onRecipeListener) {
         this.onRecipeListener = onRecipeListener;
     }
 
@@ -37,16 +36,19 @@ public class RecipeRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.Vie
 
         Glide.with(viewHolder.itemView.getContext())
                 .setDefaultRequestOptions(requestOptions)
-                .load(recipes.get(i))
+                .load(recipes.get(i).getImage_url())
                 .into(((RecipeViewHolder)viewHolder).image);
         ((RecipeViewHolder)viewHolder).title.setText(recipes.get(i).getTitle());
         ((RecipeViewHolder)viewHolder).publisher.setText(recipes.get(i).getPublisher());
-        ((RecipeViewHolder)viewHolder).socialScore.setText(String.valueOf(recipes.get(i).getSocial_rank()));
+        ((RecipeViewHolder)viewHolder).socialScore.setText(String.valueOf(Math.round(recipes.get(i).getSocial_rank())));
     }
 
     @Override
     public int getItemCount() {
-        return recipes.size();
+        if(recipes != null){
+            return recipes.size();
+        }
+        return 0;
     }
 
     public void setRecipes(List<Recipe> recipes){
