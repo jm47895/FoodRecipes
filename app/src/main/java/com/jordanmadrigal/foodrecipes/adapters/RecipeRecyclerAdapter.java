@@ -11,10 +11,14 @@ import com.bumptech.glide.request.RequestOptions;
 import com.jordanmadrigal.foodrecipes.R;
 import com.jordanmadrigal.foodrecipes.models.Recipe;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class RecipeRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
 
+    private static final int RECIPE_TYPE = 1;
+    private static final int LOADING_TYPE = 2;
+    public static final String LOADING_KEY = "LOADING";
     private List<Recipe> recipes;
     private OnRecipeListener onRecipeListener;
 
@@ -25,22 +29,63 @@ public class RecipeRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.Vie
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_recipe_list_item, viewGroup, false);
-        return new RecipeViewHolder(view, onRecipeListener);
+
+        View view = null;
+
+        switch (i){
+            case RECIPE_TYPE:
+                view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_recipe_list_item, viewGroup, false);
+                return new RecipeViewHolder(view, onRecipeListener);
+            case LOADING_TYPE:
+                view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_loading_list_item, viewGroup, false);
+                return new LoadingViewHolder(view);
+            default:
+                view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_recipe_list_item, viewGroup, false);
+                return new RecipeViewHolder(view, onRecipeListener);
+        }
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
 
-        RequestOptions requestOptions = new RequestOptions().placeholder(R.drawable.ic_launcher_background);
+        if(getItemViewType(position) == RECIPE_TYPE){
+            RequestOptions requestOptions = new RequestOptions().placeholder(R.drawable.ic_launcher_background);
 
-        Glide.with(viewHolder.itemView.getContext())
-                .setDefaultRequestOptions(requestOptions)
-                .load(recipes.get(i).getImage_url())
-                .into(((RecipeViewHolder)viewHolder).image);
-        ((RecipeViewHolder)viewHolder).title.setText(recipes.get(i).getTitle());
-        ((RecipeViewHolder)viewHolder).publisher.setText(recipes.get(i).getPublisher());
-        ((RecipeViewHolder)viewHolder).socialScore.setText(String.valueOf(Math.round(recipes.get(i).getSocial_rank())));
+            Glide.with(viewHolder.itemView.getContext())
+                    .setDefaultRequestOptions(requestOptions)
+                    .load(recipes.get(position).getImage_url())
+                    .into(((RecipeViewHolder)viewHolder).image);
+            ((RecipeViewHolder)viewHolder).title.setText(recipes.get(position).getTitle());
+            ((RecipeViewHolder)viewHolder).publisher.setText(recipes.get(position).getPublisher());
+            ((RecipeViewHolder)viewHolder).socialScore.setText(String.valueOf(Math.round(recipes.get(position).getSocial_rank())));
+        }
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        if(recipes.get(position).getTitle().equals(LOADING_KEY)){
+            return LOADING_TYPE;
+        }else{
+            return RECIPE_TYPE;
+        }
+    }
+
+    public void displayLoading (){
+        if(!isLoading()){
+            Recipe recipe = new Recipe();
+            recipe.setTitle(LOADING_KEY);
+            List<Recipe> loadingList = new ArrayList<>();
+            loadingList.add(recipe);
+            recipes = loadingList;
+            notifyDataSetChanged();
+        }
+    }
+
+    private boolean isLoading(){
+        if(recipes != null){
+            return recipes.size() > 0 && recipes.get(recipes.size() - 1).getTitle().equals(LOADING_KEY);
+        }
+        return false;
     }
 
     @Override
