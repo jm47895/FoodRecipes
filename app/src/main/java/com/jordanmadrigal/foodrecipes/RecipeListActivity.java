@@ -8,9 +8,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+
 
 import com.jordanmadrigal.foodrecipes.adapters.OnRecipeListener;
 import com.jordanmadrigal.foodrecipes.adapters.RecipeRecyclerAdapter;
@@ -35,6 +37,7 @@ public class RecipeListActivity extends BaseActivity implements OnRecipeListener
     private RecipeListViewModel recipeListViewModel;
     private RecyclerView recyclerView;
     private RecipeRecyclerAdapter adapter;
+    private SearchView searchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,14 +45,15 @@ public class RecipeListActivity extends BaseActivity implements OnRecipeListener
         setContentView(R.layout.activity_recipe_list);
 
         recyclerView = findViewById(R.id.recipe_list);
+        searchView = findViewById(R.id.search_view);
 
         initRecyclerView();
+
+        initSearchView();
 
         recipeListViewModel = ViewModelProviders.of(this).get(RecipeListViewModel.class);
 
         subscribeObservers();
-
-        testRetrofitRequest();
 
     }
 
@@ -70,8 +74,19 @@ public class RecipeListActivity extends BaseActivity implements OnRecipeListener
         recyclerView.setAdapter(adapter);
     }
 
-    private void testRetrofitRequest(){
-        searchRecipesApi("chicken", 1);
+    private void initSearchView (){
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                searchRecipesApi(query, 1);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
     }
 
     public void searchRecipesApi(String query, int pageNumber){
