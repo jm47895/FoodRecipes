@@ -15,7 +15,6 @@ public class RecipeListViewModel extends ViewModel {
     private boolean isViewingRecipes;
 
     public RecipeListViewModel() {
-        isViewingRecipes = false;
         recipeRepository = RecipeRepository.getInstance();
     }
 
@@ -24,6 +23,7 @@ public class RecipeListViewModel extends ViewModel {
     }
 
     public void searchRecipesApi(String query, int pageNumber){
+        isViewingRecipes = true;
         recipeRepository.searchRecipesApi(query, pageNumber);
     }
 
@@ -34,4 +34,13 @@ public class RecipeListViewModel extends ViewModel {
     public void setViewingRecipes(boolean viewingRecipes) {
         isViewingRecipes = viewingRecipes;
     }
+
+    public boolean onBackPressed(){
+        if(isViewingRecipes){
+            isViewingRecipes = false;
+            return false;
+        }
+        return true;
+    }
+
 }
