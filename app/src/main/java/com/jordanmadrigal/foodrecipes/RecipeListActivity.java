@@ -21,6 +21,7 @@ import com.jordanmadrigal.foodrecipes.requests.RecipeApi;
 import com.jordanmadrigal.foodrecipes.requests.ServiceGenerator;
 import com.jordanmadrigal.foodrecipes.requests.responses.RecipeSearchResponse;
 import com.jordanmadrigal.foodrecipes.utils.Constants;
+import com.jordanmadrigal.foodrecipes.utils.VerticalSpacingItemDecorator;
 import com.jordanmadrigal.foodrecipes.viewmodels.RecipeListViewModel;
 
 import java.io.IOException;
@@ -73,6 +74,8 @@ public class RecipeListActivity extends BaseActivity implements OnRecipeListener
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new RecipeRecyclerAdapter(this);
         recyclerView.setAdapter(adapter);
+        VerticalSpacingItemDecorator itemDecorator = new VerticalSpacingItemDecorator(30);
+        recyclerView.addItemDecoration(itemDecorator);
     }
 
     private void initSearchView (){
