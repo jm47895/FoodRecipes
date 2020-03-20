@@ -43,17 +43,18 @@ public class RecipeListActivity extends BaseActivity implements OnRecipeListener
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recipe_list);
+        recipeListViewModel = ViewModelProviders.of(this).get(RecipeListViewModel.class);
 
         recyclerView = findViewById(R.id.recipe_list);
         searchView = findViewById(R.id.search_view);
 
         initRecyclerView();
-
         initSearchView();
-
-        recipeListViewModel = ViewModelProviders.of(this).get(RecipeListViewModel.class);
-
         subscribeObservers();
+
+        if(!recipeListViewModel.isViewingRecipes()){
+            displaySearchCategories();
+        }
 
     }
 
@@ -101,6 +102,12 @@ public class RecipeListActivity extends BaseActivity implements OnRecipeListener
 
     @Override
     public void onCategoryClick(String category) {
+        adapter.displayLoading();
+        searchRecipesApi(category, 1);
+    }
 
+    private void displaySearchCategories(){
+        recipeListViewModel.setViewingRecipes(false);
+        adapter.displaySearchCategories();
     }
 }
