@@ -21,12 +21,14 @@ public class RecipeRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.Vie
     private static final int RECIPE_TYPE = 1;
     private static final int LOADING_TYPE = 2;
     private static final int CATEGORY_TYPE = 3;
-    public static final String LOADING_KEY = "LOADING";
+    private static final String LOADING_KEY = "LOADING";
+    private static final String EXHAUSTED_KEY = "EXHAUSTED";
     private List<Recipe> recipes;
     private OnRecipeListener onRecipeListener;
 
     public RecipeRecyclerAdapter(OnRecipeListener onRecipeListener) {
         this.onRecipeListener = onRecipeListener;
+        recipes = new ArrayList<>();
     }
 
     @NonNull
@@ -39,12 +41,12 @@ public class RecipeRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.Vie
             case RECIPE_TYPE:
                 view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_recipe_list_item, viewGroup, false);
                 return new RecipeViewHolder(view, onRecipeListener);
-            case LOADING_TYPE:
-                view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_loading_list_item, viewGroup, false);
-                return new LoadingViewHolder(view);
             case CATEGORY_TYPE:
                 view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_category_list_item, viewGroup, false);
                 return new CategoryViewHolder(view, onRecipeListener);
+            case LOADING_TYPE:
+                view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_loading_list_item, viewGroup, false);
+                return new LoadingViewHolder(view);
             default:
                 view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_recipe_list_item, viewGroup, false);
                 return new RecipeViewHolder(view, onRecipeListener);
@@ -84,6 +86,8 @@ public class RecipeRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.Vie
         if(recipes.get(position).getSocial_rank() == -1){
             return CATEGORY_TYPE;
         }else if(recipes.get(position).getTitle().equals(LOADING_KEY)){
+            return LOADING_TYPE;
+        }else if(position == recipes.size() && position != 0 /*&& !recipes.get(position).getTitle().equals(EXHAUSTED_KEY)*/){
             return LOADING_TYPE;
         }else{
             return RECIPE_TYPE;

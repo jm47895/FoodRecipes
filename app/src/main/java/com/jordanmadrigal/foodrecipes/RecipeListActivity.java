@@ -2,6 +2,7 @@ package com.jordanmadrigal.foodrecipes;
 
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -68,6 +69,7 @@ public class RecipeListActivity extends BaseActivity implements OnRecipeListener
             public void onChanged(@Nullable List<Recipe> recipes) {
                 if (recipes != null) {
                     if(recipeListViewModel.isViewingRecipes()) {
+                        recipeListViewModel.setIsPerformingQuery(false);
                         adapter.setRecipes(recipes);
                     }
                 }
@@ -81,6 +83,15 @@ public class RecipeListActivity extends BaseActivity implements OnRecipeListener
         recyclerView.setAdapter(adapter);
         VerticalSpacingItemDecorator itemDecorator = new VerticalSpacingItemDecorator(30);
         recyclerView.addItemDecoration(itemDecorator);
+
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView rv, int newState) {
+                if(!recyclerView.canScrollVertically(1)){
+                    recipeListViewModel.searchNextPage();
+                }
+            }
+        });
     }
 
     private void initSearchView (){
@@ -89,6 +100,7 @@ public class RecipeListActivity extends BaseActivity implements OnRecipeListener
             public boolean onQueryTextSubmit(String query) {
                 adapter.displayLoading();
                 searchRecipesApi(query, 1);
+                searchView.clearFocus();
                 return false;
             }
 
@@ -112,6 +124,7 @@ public class RecipeListActivity extends BaseActivity implements OnRecipeListener
     public void onCategoryClick(String category) {
         adapter.displayLoading();
         searchRecipesApi(category, 1);
+        searchView.clearFocus();
     }
 
     private void displaySearchCategories(){
