@@ -6,7 +6,6 @@ import android.util.Log;
 
 import com.jordanmadrigal.foodrecipes.AppExecutors;
 import com.jordanmadrigal.foodrecipes.models.Recipe;
-import com.jordanmadrigal.foodrecipes.requests.RecipeApi;
 import com.jordanmadrigal.foodrecipes.requests.ServiceGenerator;
 import com.jordanmadrigal.foodrecipes.utils.Constants;
 
@@ -27,6 +26,8 @@ public class RecipeApiClient {
     private static RecipeApiClient instance;
     private MutableLiveData<List<Recipe>> recipes;
     private RetrieveRecipesRunnable retrieveRecipesRunnable;
+    private RetrieveRecipeRunnable retrieveRecipeRunnable;
+    private MutableLiveData<Recipe> singleRecipe;
 
     public static RecipeApiClient getInstance(){
         if(instance == null){
@@ -38,10 +39,15 @@ public class RecipeApiClient {
 
     private RecipeApiClient() {
         recipes = new MutableLiveData<>();
+        singleRecipe = new MutableLiveData<>();
     }
 
     public LiveData<List<Recipe>> getRecipes(){
         return recipes;
+    }
+
+    public LiveData<Recipe> getSingleRecipe(){
+        return singleRecipe;
     }
 
     public void searchRecipesApi(String query, int pageNumber){
@@ -52,6 +58,22 @@ public class RecipeApiClient {
         retrieveRecipesRunnable = new RetrieveRecipesRunnable(query, pageNumber);
         final Future handler = AppExecutors.getInstance().getNetworkIO().submit(retrieveRecipesRunnable);
 
+        AppExecutors.getInstance().getNetworkIO().schedule(new Runnable() {
+            @Override
+            public void run() {
+                handler.cancel(true);
+            }
+        }, NETWORK_TIMEOUT, TimeUnit.MILLISECONDS);
+    }
+
+    public void searchRecipeById(String recipeId){
+        if(retrieveRecipeRunnable != null){
+            retrieveRecipeRunnable = null;
+        }
+
+        retrieveRecipeRunnable = new RetrieveRecipeRunnable(recipeId);
+
+        final Future handler = AppExecutors.getInstance().getNetworkIO().submit(retrieveRecipeRunnable);
         AppExecutors.getInstance().getNetworkIO().schedule(new Runnable() {
             @Override
             public void run() {
@@ -110,9 +132,54 @@ public class RecipeApiClient {
         }
     }
 
+    private class RetrieveRecipeRunnable implements Runnable{
+
+        private String recipeId;
+        private boolean cancelRequest;
+
+        private RetrieveRecipeRunnable(String recipeId) {
+            this.recipeId = recipeId;
+            cancelRequest = false;
+        }
+
+        @Override
+        public void run() {
+            try {
+                Response response = getRecipe(recipeId).execute();
+                if(cancelRequest){
+                    return;
+                }
+
+                if(response.code() == 200){
+                    Recipe recipe = ((RecipeResponse)response.body()).getRecipe();
+                    singleRecipe.postValue(recipe);
+                }else{
+                    String error = response.errorBody().string();
+                    Log.e(TAG, "Response Error: " + error);
+                    singleRecipe.postValue(null);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                singleRecipe.postValue(null);
+            }
+        }
+
+        private Call<RecipeResponse> getRecipe(String recipeId){
+            return ServiceGenerator.getRecipeApi().getRecipe(Constants.API_KEY, recipeId);
+        }
+
+        private void cancelRequest(){
+            Log.d(TAG, "Cancelling search query");
+            cancelRequest = true;
+        }
+    }
+
     public void cancelRequest(){
         if(retrieveRecipesRunnable != null) {
             retrieveRecipesRunnable.cancelRequest();
+        }
+        if(retrieveRecipeRunnable != null){
+            retrieveRecipeRunnable.cancelRequest();
         }
     }
 }
