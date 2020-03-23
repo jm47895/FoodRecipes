@@ -5,8 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/parent"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:visibility="gone">
+    android:layout_height="match_parent">
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
@@ -22,13 +21,14 @@
             app:layout_constraintBottom_toTopOf="@+id/recipe_title"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed" />
 
         <TextView
             android:id="@+id/recipe_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="8dp"
+            android:padding="10dp"
             android:textColor="#000"
             android:textSize="@dimen/recipe_title_text_size"
             app:layout_constraintBottom_toTopOf="@+id/ingredients_title"
@@ -42,28 +42,28 @@
             android:id="@+id/ingredients_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:padding="10dp"
             android:textSize="@dimen/recipe_publisher_text_size"
             android:textStyle="bold"
-            android:padding="8dp"
-            app:layout_constraintHorizontal_bias="0"
+            android:text="@string/ingredients"
             app:layout_constraintBottom_toTopOf="@+id/ingredients_container"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/recipe_title"
-            tools:text="Ingredients" />
+            app:layout_constraintTop_toBottomOf="@+id/recipe_title" />
 
         <TextView
             android:id="@+id/recipe_social_score"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:padding="10dp"
             android:textColor="@color/red"
-            android:padding="8dp"
             android:textSize="@dimen/recipe_publisher_text_size"
-            app:layout_constraintBottom_toBottomOf="@+id/recipe_title"
+            app:layout_constraintBottom_toBottomOf="@+id/ingredients_title"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="1"
             app:layout_constraintStart_toEndOf="@+id/recipe_title"
-            app:layout_constraintTop_toTopOf="@+id/recipe_title"
+            app:layout_constraintTop_toTopOf="@+id/ingredients_title"
             tools:text="100" />
 
         <LinearLayout
@@ -75,7 +75,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/ingredients_title"/>
+            app:layout_constraintTop_toBottomOf="@+id/ingredients_title" />
 
 
     </android.support.constraint.ConstraintLayout>

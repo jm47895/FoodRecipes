@@ -9,6 +9,7 @@ import com.jordanmadrigal.foodrecipes.repositories.RecipeRepository;
 public class SingleRecipeViewModel extends ViewModel {
 
     private RecipeRepository recipeRepository;
+    private String recipeId;
 
     public SingleRecipeViewModel() {
         recipeRepository = RecipeRepository.getInstance();
@@ -19,6 +20,11 @@ public class SingleRecipeViewModel extends ViewModel {
     }
 
     public void searchRecipeById(String recipeId){
+        this.recipeId = recipeId;
         recipeRepository.searchRecipeById(recipeId);
+    }
+
+    public String getRecipeId() {
+        return recipeId;
     }
 }
