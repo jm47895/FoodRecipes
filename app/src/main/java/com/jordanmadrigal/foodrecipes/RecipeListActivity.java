@@ -2,6 +2,7 @@ package com.jordanmadrigal.foodrecipes;
 
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
@@ -35,6 +36,8 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
+import static com.jordanmadrigal.foodrecipes.utils.Constants.RECIPE_KEY;
 
 public class RecipeListActivity extends BaseActivity implements OnRecipeListener {
 
@@ -117,7 +120,9 @@ public class RecipeListActivity extends BaseActivity implements OnRecipeListener
 
     @Override
     public void onRecipeClick(int position) {
-
+        Intent intent = new Intent(this, RecipeActivity.class);
+        intent.putExtra(RECIPE_KEY, adapter.getSelectedRecipe(position));
+        startActivity(intent);
     }
 
     @Override
@@ -158,4 +163,5 @@ public class RecipeListActivity extends BaseActivity implements OnRecipeListener
         return true;
 
     }
+
 }
