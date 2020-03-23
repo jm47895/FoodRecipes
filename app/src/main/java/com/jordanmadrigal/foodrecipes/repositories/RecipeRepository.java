@@ -34,6 +34,8 @@ public class RecipeRepository {
         return recipeApiClient.getSingleRecipe();
     }
 
+    public LiveData<Boolean> isRecipeResponseTimedOut(){return recipeApiClient.isRecipeResponseTimedOut();}
+
     public void searchRecipesApi(String query, int pageNumber){
         if(pageNumber == 0){
             pageNumber = 1;
