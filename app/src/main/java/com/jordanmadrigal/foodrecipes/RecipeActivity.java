@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Display;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -65,10 +66,28 @@ public class RecipeActivity extends BaseActivity {
             @Override
             public void onChanged(@Nullable Boolean hasTimedOut) {
                 if(hasTimedOut && !singleRecipeViewModel.hasRetrievedRecipe()){
-                    Log.d(TAG, "---------------------Timed Out");
+                    displayErrorScreen(getString(R.string.check_your_internet));
                 }
             }
         });
+    }
+
+    private void displayErrorScreen(String errorMsg){
+
+        Glide.with(this)
+                .load(R.drawable.ic_launcher_background)
+                .into(recipeImage);
+
+        recipeTitle.setText(R.string.error_retrieving_recipe);
+        recipeRank.setText("");
+
+        TextView textView = new TextView(this);
+        textView.setText(errorMsg);
+        textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        recipeIngredientsContainer.addView(textView);
+
+        showParent();
+        showProgressBar(false);
     }
 
     private void setSingleRecipeProperties(Recipe singleRecipe){

@@ -3,4 +3,7 @@
     <string name="categories">Categories</string>
     <string name="somefood">someFood</string>
     <string name="ingredients">Ingredients</string>
+    <string name="error_retrieving_recipe">Error retrieving recipe...</string>
+    <string name="error">Error...</string>
+    <string name="check_your_internet">Error Retrieving data, check your internet connection.</string>
 </resources>
