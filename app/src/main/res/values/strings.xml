@@ -6,4 +6,5 @@
     <string name="error_retrieving_recipe">Error retrieving recipe...</string>
     <string name="error">Error...</string>
     <string name="check_your_internet">Error Retrieving data, check your internet connection.</string>
+    <string name="no_more_results">No more results..</string>
 </resources>

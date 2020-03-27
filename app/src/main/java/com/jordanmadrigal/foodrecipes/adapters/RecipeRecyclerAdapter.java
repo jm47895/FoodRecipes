@@ -21,6 +21,7 @@ public class RecipeRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.Vie
     private static final int RECIPE_TYPE = 1;
     private static final int LOADING_TYPE = 2;
     private static final int CATEGORY_TYPE = 3;
+    private static final int EXHAUSTED_TYPE = 4;
     private static final String LOADING_KEY = "LOADING";
     private static final String EXHAUSTED_KEY = "EXHAUSTED";
     private List<Recipe> recipes;
@@ -47,6 +48,9 @@ public class RecipeRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.Vie
             case LOADING_TYPE:
                 view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_loading_list_item, viewGroup, false);
                 return new LoadingViewHolder(view);
+            case EXHAUSTED_TYPE:
+                view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_search_exhausted, viewGroup, false);
+                return new SearchExhaustedViewHolder(view);
             default:
                 view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_recipe_list_item, viewGroup, false);
                 return new RecipeViewHolder(view, onRecipeListener);
@@ -87,11 +91,32 @@ public class RecipeRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.Vie
             return CATEGORY_TYPE;
         }else if(recipes.get(position).getTitle().equals(LOADING_KEY)){
             return LOADING_TYPE;
-        }else if(position == recipes.size() && position != 0 /*&& !recipes.get(position).getTitle().equals(EXHAUSTED_KEY)*/){
+        }else if(recipes.get(position).getTitle().equals(EXHAUSTED_KEY)){
+            return EXHAUSTED_TYPE;
+        } else if(position == recipes.size() && position != 0 && !recipes.get(position).getTitle().equals(EXHAUSTED_KEY)){
             return LOADING_TYPE;
         }else{
             return RECIPE_TYPE;
         }
+    }
+
+    public void setQueryExhausted(){
+        hideLoading();
+        Recipe exhaustedRecipe = new Recipe();
+        exhaustedRecipe.setTitle(EXHAUSTED_KEY);
+        recipes.add(exhaustedRecipe);
+        notifyDataSetChanged();
+    }
+
+    private void hideLoading(){
+        if(isLoading()){
+            for(Recipe recipe: recipes){
+                if(recipe.getTitle().equals(LOADING_KEY)){
+                    recipes.remove(recipe);
+                }
+            }
+        }
+        notifyDataSetChanged();
     }
 
     public void displayLoading (){

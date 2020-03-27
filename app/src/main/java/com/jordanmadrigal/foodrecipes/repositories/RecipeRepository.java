@@ -1,7 +1,10 @@
 package com.jordanmadrigal.foodrecipes.repositories;
 
 import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MediatorLiveData;
 import android.arch.lifecycle.MutableLiveData;
+import android.arch.lifecycle.Observer;
+import android.support.annotation.Nullable;
 
 import com.jordanmadrigal.foodrecipes.models.Recipe;
 import com.jordanmadrigal.foodrecipes.requests.responses.RecipeApiClient;
@@ -14,6 +17,8 @@ public class RecipeRepository {
     private RecipeApiClient recipeApiClient;
     private String query;
     private int pageNumber;
+    private MutableLiveData<Boolean> isQueryExhausted = new MutableLiveData<>();
+    private MediatorLiveData<List<Recipe>> recipes = new MediatorLiveData<>();
 
     public static RecipeRepository getInstance(){
         if(instance == null){
@@ -24,10 +29,41 @@ public class RecipeRepository {
 
     private RecipeRepository() {
         recipeApiClient = RecipeApiClient.getInstance();
+        initMediators();
     }
 
     public LiveData<List<Recipe>> getRecipes(){
-        return recipeApiClient.getRecipes();
+        return recipes;
+    }
+
+    private void initMediators(){
+        LiveData<List<Recipe>> recipeListApiSource = recipeApiClient.getRecipes();
+        recipes.addSource(recipeListApiSource, new Observer<List<Recipe>>() {
+            @Override
+            public void onChanged(@Nullable List<Recipe> recipeList) {
+                if(recipeList != null){
+                    recipes.setValue(recipeList);
+                    doneQuery(recipeList);
+                }else{
+                    //search database cache
+                    doneQuery(null);
+                }
+            }
+        });
+    }
+
+    private void doneQuery(List<Recipe> list){
+        if(list != null){
+            if(list.size() % 30 != 0){
+                isQueryExhausted.setValue(true);
+            }
+        }else{
+            isQueryExhausted.setValue(true);
+        }
+    }
+
+    public LiveData<Boolean> hasQueryExhausted(){
+        return isQueryExhausted;
     }
 
     public LiveData<Recipe> getSingleRecipe(){
@@ -42,6 +78,7 @@ public class RecipeRepository {
         }
         this.query = query;
         this.pageNumber = pageNumber;
+        isQueryExhausted.setValue(false);
         recipeApiClient.searchRecipesApi(query, pageNumber);
     }
 
