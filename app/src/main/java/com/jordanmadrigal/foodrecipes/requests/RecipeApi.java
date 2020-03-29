@@ -1,5 +1,8 @@
 package com.jordanmadrigal.foodrecipes.requests;
 
+import android.arch.lifecycle.LiveData;
+
+import com.jordanmadrigal.foodrecipes.requests.responses.ApiResponse;
 import com.jordanmadrigal.foodrecipes.requests.responses.RecipeResponse;
 import com.jordanmadrigal.foodrecipes.requests.responses.RecipeSearchResponse;
 
@@ -9,19 +12,18 @@ import retrofit2.http.Query;
 
 public interface RecipeApi {
 
-    //search
+    // SEARCH
     @GET("api/search")
-    Call<RecipeSearchResponse> searchRecipe(
+    LiveData<ApiResponse<RecipeSearchResponse>> searchRecipe(
             @Query("key") String key,
             @Query("q") String query,
             @Query("page") String page
     );
 
-    //individual recipe
+    // GET RECIPE REQUEST
     @GET("api/get")
-    Call<RecipeResponse> getRecipe(
+    LiveData<ApiResponse<RecipeResponse>> getRecipe(
             @Query("key") String key,
             @Query("rId") String recipe_id
     );
-
 }

@@ -1,28 +1,54 @@
 package com.jordanmadrigal.foodrecipes.adapters;
 
 import android.support.annotation.NonNull;
+import android.support.v7.widget.AppCompatImageView;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.RequestManager;
+import com.bumptech.glide.util.ViewPreloadSizeProvider;
 import com.jordanmadrigal.foodrecipes.R;
+import com.jordanmadrigal.foodrecipes.adapters.OnRecipeListener;
+import com.jordanmadrigal.foodrecipes.models.Recipe;
 
 public class RecipeViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-    public TextView title, publisher, socialScore;
-    public ImageView image;
-    public OnRecipeListener onRecipeListener;
+    TextView title, publisher, socialScore;
+    AppCompatImageView image;
+    OnRecipeListener onRecipeListener;
+    RequestManager requestManager;
+    ViewPreloadSizeProvider viewPreloadSizeProvider;
 
-    public RecipeViewHolder(@NonNull View itemView, OnRecipeListener onRecipeListener) {
+    public RecipeViewHolder(@NonNull View itemView,
+                            OnRecipeListener onRecipeListener,
+                            RequestManager requestManager,
+                            ViewPreloadSizeProvider preloadSizeProvider) {
         super(itemView);
+
+        this.onRecipeListener = onRecipeListener;
+        this.requestManager = requestManager;
+        this.viewPreloadSizeProvider = preloadSizeProvider;
+
         title = itemView.findViewById(R.id.recipe_title);
         publisher = itemView.findViewById(R.id.recipe_publisher);
         socialScore = itemView.findViewById(R.id.recipe_social_score);
         image = itemView.findViewById(R.id.recipe_image);
-        this.onRecipeListener = onRecipeListener;
 
         itemView.setOnClickListener(this);
+    }
+
+    public void onBind(Recipe recipe){
+
+        requestManager
+                .load(recipe.getImage_url())
+                .into(image);
+
+        title.setText(recipe.getTitle());
+        publisher.setText(recipe.getPublisher());
+        socialScore.setText(String.valueOf(Math.round(recipe.getSocial_rank())));
+
+        viewPreloadSizeProvider.setView(image);
     }
 
     @Override
@@ -30,3 +56,8 @@ public class RecipeViewHolder extends RecyclerView.ViewHolder implements View.On
         onRecipeListener.onRecipeClick(getAdapterPosition());
     }
 }
+
+
+
+
+

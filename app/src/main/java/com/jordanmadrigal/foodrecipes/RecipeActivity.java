@@ -1,131 +1,157 @@
 package com.jordanmadrigal.foodrecipes;
 
 import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModel;
 import android.arch.lifecycle.ViewModelProviders;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.v7.widget.AppCompatImageView;
 import android.util.Log;
-import android.view.Display;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.jordanmadrigal.foodrecipes.models.Recipe;
-import com.jordanmadrigal.foodrecipes.viewmodels.SingleRecipeViewModel;
-
-import static com.jordanmadrigal.foodrecipes.utils.Constants.RECIPE_KEY;
+import com.jordanmadrigal.foodrecipes.util.Resource;
+import com.jordanmadrigal.foodrecipes.viewmodels.RecipeViewModel;
 
 public class RecipeActivity extends BaseActivity {
 
     private static final String TAG = "RecipeActivity";
 
-    private ImageView recipeImage;
-    private TextView recipeTitle, recipeRank;
-    private LinearLayout recipeIngredientsContainer;
-    private ScrollView scrollView;
-    private SingleRecipeViewModel singleRecipeViewModel;
+    // UI components
+    private AppCompatImageView mRecipeImage;
+    private TextView mRecipeTitle, mRecipeRank;
+    private LinearLayout mRecipeIngredientsContainer;
+    private ScrollView mScrollView;
+
+    private RecipeViewModel mRecipeViewModel;
+
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_recipe_item);
+        setContentView(R.layout.activity_recipe);
+        mRecipeImage = findViewById(R.id.recipe_image);
+        mRecipeTitle = findViewById(R.id.recipe_title);
+        mRecipeRank = findViewById(R.id.recipe_social_score);
+        mRecipeIngredientsContainer = findViewById(R.id.ingredients_container);
+        mScrollView = findViewById(R.id.parent);
 
-        recipeImage = findViewById(R.id.recipe_image);
-        recipeTitle = findViewById(R.id.recipe_title);
-        recipeRank = findViewById(R.id.recipe_social_score);
-        recipeIngredientsContainer = findViewById(R.id.ingredients_container);
-        scrollView = findViewById(R.id.parent);
-        singleRecipeViewModel = ViewModelProviders.of(this).get(SingleRecipeViewModel.class);
+        mRecipeViewModel = ViewModelProviders.of(this).get(RecipeViewModel.class);
 
-        showProgressBar(true);
-        subscribeObservers();
         getIncomingIntent();
     }
 
-    private void subscribeObservers(){
-        singleRecipeViewModel.getSingleRecipe().observe(this, new Observer<Recipe>() {
+    private void getIncomingIntent(){
+        if(getIntent().hasExtra("recipe")){
+            Recipe recipe = getIntent().getParcelableExtra("recipe");
+            Log.d(TAG, "getIncomingIntent: " + recipe.getTitle());
+            subscribeObservers(recipe.getRecipe_id());
+        }
+    }
+
+    private void subscribeObservers(final String recipeId){
+        mRecipeViewModel.searchRecipeApi(recipeId).observe(this, new Observer<Resource<Recipe>>() {
             @Override
-            public void onChanged(@Nullable Recipe recipe) {
-                if(recipe != null){
-                    if(recipe.getRecipe_id().equals(singleRecipeViewModel.getRecipeId())) {
-                        setSingleRecipeProperties(recipe);
-                        singleRecipeViewModel.setRetrievedRecipe(true);
+            public void onChanged(@Nullable Resource<Recipe> recipeResource) {
+                if(recipeResource != null){
+                    if(recipeResource.data != null){
+                        switch (recipeResource.status){
+
+                            case LOADING:{
+                                showProgressBar(true);
+                                break;
+                            }
+
+                            case ERROR:{
+                                Log.e(TAG, "onChanged: status: ERROR, Recipe: " + recipeResource.data.getTitle() );
+                                Log.e(TAG, "onChanged: ERROR message: " + recipeResource.message );
+                                showParent();showProgressBar(false);
+                                setRecipeProperties(recipeResource.data);
+                                break;
+                            }
+
+                            case SUCCESS:{
+                                Log.d(TAG, "onChanged: cache has been refreshed.");
+                                Log.d(TAG, "onChanged: status: SUCCESS, Recipe: " + recipeResource.data.getTitle());
+                                showParent();
+                                showProgressBar(false);
+                                setRecipeProperties(recipeResource.data);
+                                break;
+                            }
+                        }
                     }
                 }
             }
         });
-
-        singleRecipeViewModel.isRecipeResponseTimedOut().observe(this, new Observer<Boolean>() {
-            @Override
-            public void onChanged(@Nullable Boolean hasTimedOut) {
-                if(hasTimedOut && !singleRecipeViewModel.hasRetrievedRecipe()){
-                    displayErrorScreen(getString(R.string.check_your_internet));
-                }
-            }
-        });
     }
 
-    private void displayErrorScreen(String errorMsg){
-
-        Glide.with(this)
-                .load(R.drawable.ic_launcher_background)
-                .into(recipeImage);
-
-        recipeTitle.setText(R.string.error_retrieving_recipe);
-        recipeRank.setText("");
-
-        TextView textView = new TextView(this);
-        textView.setText(errorMsg);
-        textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        recipeIngredientsContainer.addView(textView);
-
-        showParent();
-        showProgressBar(false);
-    }
-
-    private void setSingleRecipeProperties(Recipe singleRecipe){
-        if(singleRecipe != null) {
-            RequestOptions requestOptions = new RequestOptions().placeholder(R.drawable.ic_launcher_background);
+    private void setRecipeProperties(Recipe recipe){
+        if(recipe != null){
+            RequestOptions options = new RequestOptions()
+                    .placeholder(R.drawable.white_background)
+                    .error(R.drawable.white_background);
 
             Glide.with(this)
-                    .setDefaultRequestOptions(requestOptions)
-                    .load(singleRecipe.getImage_url())
-                    .into(recipeImage);
+                    .setDefaultRequestOptions(options)
+                    .load(recipe.getImage_url())
+                    .into(mRecipeImage);
 
-            recipeTitle.setText(singleRecipe.getTitle());
-            recipeRank.setText(String.valueOf(Math.round(singleRecipe.getSocial_rank())));
+            mRecipeTitle.setText(recipe.getTitle());
+            mRecipeRank.setText(String.valueOf(Math.round(recipe.getSocial_rank())));
 
-            recipeIngredientsContainer.removeAllViews();
-            for (String ingredient : singleRecipe.getIngredients()) {
-                TextView ingredientTextView = new TextView(this);
-                ingredientTextView.setText(ingredient);
-                ingredientTextView.setTextSize(15);
-                ingredientTextView.setLayoutParams(
-                        new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                );
-                recipeIngredientsContainer.addView(ingredientTextView);
-            }
-
-            showParent();
-            showProgressBar(false);
+            setIngredients(recipe);
         }
     }
+
+    private void setIngredients(Recipe recipe){
+        mRecipeIngredientsContainer.removeAllViews();
+
+        if(recipe.getIngredients() != null){
+            for(String ingredient: recipe.getIngredients()){
+                TextView textView = new TextView(this);
+                textView.setText(ingredient);
+                textView.setTextSize(15);
+                textView.setLayoutParams(
+                        new LinearLayout.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT));
+                mRecipeIngredientsContainer.addView(textView);
+            }
+        }
+        else{
+            TextView textView = new TextView(this);
+            textView.setText("Error retrieving ingredients.\nCheck network connection.");
+            textView.setTextSize(15);
+            textView.setLayoutParams(
+                    new LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.WRAP_CONTENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT));
+            mRecipeIngredientsContainer.addView(textView);
+        }
+    }
+
 
     private void showParent(){
-        scrollView.setVisibility(View.VISIBLE);
-    }
-
-    private void getIncomingIntent(){
-        if(getIntent().hasExtra(RECIPE_KEY)){
-            Recipe recipe = getIntent().getParcelableExtra(RECIPE_KEY);
-            singleRecipeViewModel.searchRecipeById(recipe.getRecipe_id());
-        }
+        mScrollView.setVisibility(View.VISIBLE);
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

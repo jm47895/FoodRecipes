@@ -1,38 +1,79 @@
 package com.jordanmadrigal.foodrecipes.models;
 
+
+import android.arch.persistence.room.ColumnInfo;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.PrimaryKey;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 import java.util.Arrays;
 
-public class Recipe implements Parcelable {
+@Entity(tableName = "recipes")
+public class Recipe implements Parcelable{
 
-    private String title;
-    private String publisher;
-    private String[] ingredients;
+    @PrimaryKey
+    @NonNull
     private String recipe_id;
+
+    @ColumnInfo(name = "title")
+    private String title;
+
+    @ColumnInfo(name = "publisher")
+    private String publisher;
+
+    @ColumnInfo(name = "image_url")
     private String image_url;
+
+    @ColumnInfo(name = "social_rank")
     private float social_rank;
 
-    public Recipe(String title, String publisher, String[] ingredients, String recipe_id, String image_url, float social_rank) {
+    @ColumnInfo(name = "ingredients")
+    private String[] ingredients;
+
+    @ColumnInfo(name = "timestamp")
+    private int timestamp;
+
+
+    public Recipe(@NonNull String recipe_id, String title, String publisher, String image_url,
+                  float social_rank, String[] ingredients, int timestamp) {
+        this.recipe_id = recipe_id;
         this.title = title;
         this.publisher = publisher;
-        this.ingredients = ingredients;
-        this.recipe_id = recipe_id;
         this.image_url = image_url;
         this.social_rank = social_rank;
+        this.ingredients = ingredients;
+        this.timestamp = timestamp;
     }
 
     public Recipe() {
     }
 
     protected Recipe(Parcel in) {
+        recipe_id = in.readString();
         title = in.readString();
         publisher = in.readString();
-        ingredients = in.createStringArray();
-        recipe_id = in.readString();
         image_url = in.readString();
         social_rank = in.readFloat();
+        ingredients = in.createStringArray();
+        timestamp = in.readInt();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(recipe_id);
+        dest.writeString(title);
+        dest.writeString(publisher);
+        dest.writeString(image_url);
+        dest.writeFloat(social_rank);
+        dest.writeStringArray(ingredients);
+        dest.writeInt(timestamp);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
     public static final Creator<Recipe> CREATOR = new Creator<Recipe>() {
@@ -46,6 +87,14 @@ public class Recipe implements Parcelable {
             return new Recipe[size];
         }
     };
+
+    public int getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(int timestamp) {
+        this.timestamp = timestamp;
+    }
 
     public String getTitle() {
         return title;
@@ -71,14 +120,6 @@ public class Recipe implements Parcelable {
         this.ingredients = ingredients;
     }
 
-    public String getRecipe_id() {
-        return recipe_id;
-    }
-
-    public void setRecipe_id(String recipe_id) {
-        this.recipe_id = recipe_id;
-    }
-
     public String getImage_url() {
         return image_url;
     }
@@ -95,30 +136,38 @@ public class Recipe implements Parcelable {
         this.social_rank = social_rank;
     }
 
+    public String getRecipe_id() {
+        return recipe_id;
+    }
+
+    public void setRecipe_id(String recipe_id) {
+        this.recipe_id = recipe_id;
+    }
+
     @Override
     public String toString() {
         return "Recipe{" +
-                "title='" + title + '\'' +
+                "recipe_id='" + recipe_id + '\'' +
+                ", title='" + title + '\'' +
                 ", publisher='" + publisher + '\'' +
-                ", ingredients=" + Arrays.toString(ingredients) +
-                ", recipe_id='" + recipe_id + '\'' +
                 ", image_url='" + image_url + '\'' +
                 ", social_rank=" + social_rank +
+                ", ingredients=" + Arrays.toString(ingredients) +
+                ", timestamp=" + timestamp +
                 '}';
     }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(title);
-        dest.writeString(publisher);
-        dest.writeStringArray(ingredients);
-        dest.writeString(recipe_id);
-        dest.writeString(image_url);
-        dest.writeFloat(social_rank);
-    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,18 +1,28 @@
 package com.jordanmadrigal.foodrecipes.requests.responses;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
+import com.jordanmadrigal.foodrecipes.models.Recipe;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import com.jordanmadrigal.foodrecipes.models.Recipe;
 
 public class RecipeResponse {
 
     @SerializedName("recipe")
-    @Expose
+    @Expose()
     private Recipe recipe;
 
-    public Recipe getRecipe() {
+    @SerializedName("error")
+    @Expose()
+    private String error;
+
+    public String getError() {
+        return error;
+    }
+
+    @Nullable
+    public Recipe getRecipe(){
         return recipe;
     }
 
@@ -20,6 +30,7 @@ public class RecipeResponse {
     public String toString() {
         return "RecipeResponse{" +
                 "recipe=" + recipe +
+                ", error='" + error + '\'' +
                 '}';
     }
 }

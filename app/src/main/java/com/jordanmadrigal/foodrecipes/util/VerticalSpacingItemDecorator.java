@@ -1,4 +1,4 @@
-package com.jordanmadrigal.foodrecipes.utils;
+package com.jordanmadrigal.foodrecipes.util;
 
 import android.graphics.Rect;
 import android.support.annotation.NonNull;
@@ -15,6 +15,7 @@ public class VerticalSpacingItemDecorator extends RecyclerView.ItemDecoration {
 
     @Override
     public void getItemOffsets(@NonNull Rect outRect, @NonNull View view, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
+
         outRect.top = verticalSpaceHeight;
     }
 }

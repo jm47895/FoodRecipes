@@ -3,175 +3,230 @@ package com.jordanmadrigal.foodrecipes;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
+import android.widget.Toast;
 
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.RequestManager;
+import com.bumptech.glide.integration.recyclerview.RecyclerViewPreloader;
+import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.util.ViewPreloadSizeProvider;
 import com.jordanmadrigal.foodrecipes.adapters.OnRecipeListener;
 import com.jordanmadrigal.foodrecipes.adapters.RecipeRecyclerAdapter;
 import com.jordanmadrigal.foodrecipes.models.Recipe;
-import com.jordanmadrigal.foodrecipes.requests.RecipeApi;
-import com.jordanmadrigal.foodrecipes.requests.ServiceGenerator;
-import com.jordanmadrigal.foodrecipes.requests.responses.RecipeSearchResponse;
-import com.jordanmadrigal.foodrecipes.utils.Constants;
-import com.jordanmadrigal.foodrecipes.utils.VerticalSpacingItemDecorator;
+import com.jordanmadrigal.foodrecipes.util.Resource;
+import com.jordanmadrigal.foodrecipes.util.Testing;
+import com.jordanmadrigal.foodrecipes.util.VerticalSpacingItemDecorator;
 import com.jordanmadrigal.foodrecipes.viewmodels.RecipeListViewModel;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import static com.jordanmadrigal.foodrecipes.viewmodels.RecipeListViewModel.QUERY_EXHAUSTED;
 
-import static com.jordanmadrigal.foodrecipes.utils.Constants.RECIPE_KEY;
 
 public class RecipeListActivity extends BaseActivity implements OnRecipeListener {
 
     private static final String TAG = "RecipeListActivity";
-    private RecipeListViewModel recipeListViewModel;
-    private RecyclerView recyclerView;
-    private RecipeRecyclerAdapter adapter;
-    private SearchView searchView;
+
+    private RecipeListViewModel mRecipeListViewModel;
+    private RecyclerView mRecyclerView;
+    private RecipeRecyclerAdapter mAdapter;
+    private SearchView mSearchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recipe_list);
-        recipeListViewModel = ViewModelProviders.of(this).get(RecipeListViewModel.class);
+        mRecyclerView = findViewById(R.id.recipe_list);
+        mSearchView = findViewById(R.id.search_view);
 
-        recyclerView = findViewById(R.id.recipe_list);
-        searchView = findViewById(R.id.search_view);
+        mRecipeListViewModel = ViewModelProviders.of(this).get(RecipeListViewModel.class);
 
         initRecyclerView();
         initSearchView();
         subscribeObservers();
-
-        if(!recipeListViewModel.isViewingRecipes()){
-            displaySearchCategories();
-        }
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+        setSupportActionBar((Toolbar)findViewById(R.id.toolbar));
     }
 
     private void subscribeObservers(){
-        recipeListViewModel.getRecipes().observe(this, new Observer<List<Recipe>>() {
+        mRecipeListViewModel.getRecipes().observe(this, new Observer<Resource<List<Recipe>>>() {
             @Override
-            public void onChanged(@Nullable List<Recipe> recipes) {
-                if (recipes != null) {
-                    if(recipeListViewModel.isViewingRecipes()) {
-                        recipeListViewModel.setIsPerformingQuery(false);
-                        adapter.setRecipes(recipes);
+            public void onChanged(@Nullable Resource<List<Recipe>> listResource) {
+                if(listResource != null){
+                    Log.d(TAG, "onChanged: status: " + listResource.status);
+
+                    if(listResource.data != null){
+                        switch (listResource.status){
+                            case LOADING:{
+                                if(mRecipeListViewModel.getPageNumber() > 1){
+                                    mAdapter.displayLoading();
+                                }
+                                else{
+                                    mAdapter.displayOnlyLoading();
+                                }
+                                break;
+                            }
+
+                            case ERROR:{
+                                Log.e(TAG, "onChanged: cannot refresh the cache." );
+                                Log.e(TAG, "onChanged: ERROR message: " + listResource.message );
+                                Log.e(TAG, "onChanged: status: ERROR, #recipes: " + listResource.data.size());
+                                mAdapter.hideLoading();
+                                mAdapter.setRecipes(listResource.data);
+                                Toast.makeText(RecipeListActivity.this, listResource.message, Toast.LENGTH_SHORT).show();
+
+                                if(listResource.message.equals(QUERY_EXHAUSTED)){
+                                    mAdapter.setQueryExhausted();
+                                }
+                                break;
+                            }
+
+                            case SUCCESS:{
+                                Log.d(TAG, "onChanged: cache has been refreshed.");
+                                Log.d(TAG, "onChanged: status: SUCCESS, #Recipes: " + listResource.data.size());
+                                mAdapter.hideLoading();
+                                mAdapter.setRecipes(listResource.data);
+                                break;
+                            }
+                        }
                     }
                 }
             }
         });
 
-        recipeListViewModel.hasQueryExhausted().observe(this, new Observer<Boolean>() {
+        mRecipeListViewModel.getViewstate().observe(this, new Observer<RecipeListViewModel.ViewState>() {
             @Override
-            public void onChanged(@Nullable Boolean aBoolean) {
-                if(aBoolean){
-                    Log.d(TAG,"THE QUERY HAS EXHAUSTED");
-                    adapter.setQueryExhausted();
+            public void onChanged(@Nullable RecipeListViewModel.ViewState viewState) {
+                if(viewState != null){
+                    switch (viewState){
+
+                        case RECIPES:{
+                            // recipes will show automatically from other observer
+                            break;
+                        }
+
+                        case CATEGORIES:{
+                            displaySearchCategories();
+                            break;
+                        }
+                    }
                 }
             }
         });
     }
 
-    private void initRecyclerView(){ ;
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new RecipeRecyclerAdapter(this);
-        recyclerView.setAdapter(adapter);
+    private RequestManager initGlide(){
+
+        RequestOptions options = new RequestOptions()
+                .placeholder(R.drawable.white_background)
+                .error(R.drawable.white_background);
+
+        return Glide.with(this)
+                .setDefaultRequestOptions(options);
+    }
+
+    private void searchRecipesApi(String query){
+        mRecyclerView.smoothScrollToPosition(0);
+        mRecipeListViewModel.searchRecipesApi(query, 1);
+        mSearchView.clearFocus();
+    }
+
+    private void initRecyclerView(){
+        ViewPreloadSizeProvider<String> viewPreloader = new ViewPreloadSizeProvider<>();
+        mAdapter = new RecipeRecyclerAdapter(this, initGlide(), viewPreloader);
         VerticalSpacingItemDecorator itemDecorator = new VerticalSpacingItemDecorator(30);
-        recyclerView.addItemDecoration(itemDecorator);
+        mRecyclerView.addItemDecoration(itemDecorator);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        RecyclerViewPreloader<String> preloader = new RecyclerViewPreloader<String>(
+                Glide.with(this),
+                mAdapter,
+                viewPreloader,
+                30);
+
+        mRecyclerView.addOnScrollListener(preloader);
+
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
-            public void onScrollStateChanged(@NonNull RecyclerView rv, int newState) {
-                if(!recyclerView.canScrollVertically(1)){
-                    recipeListViewModel.searchNextPage();
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+
+                if(!mRecyclerView.canScrollVertically(1)
+                        && mRecipeListViewModel.getViewstate().getValue() == RecipeListViewModel.ViewState.RECIPES){
+                    mRecipeListViewModel.searchNextPage();
                 }
             }
         });
+
+        mRecyclerView.setAdapter(mAdapter);
     }
 
-    private void initSearchView (){
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+    private void initSearchView(){
+        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
-            public boolean onQueryTextSubmit(String query) {
-                adapter.displayLoading();
-                searchRecipesApi(query, 1);
-                searchView.clearFocus();
+            public boolean onQueryTextSubmit(String s) {
+
+                searchRecipesApi(s);
                 return false;
             }
 
             @Override
-            public boolean onQueryTextChange(String newText) {
+            public boolean onQueryTextChange(String s) {
                 return false;
             }
         });
-    }
-
-    public void searchRecipesApi(String query, int pageNumber){
-        recipeListViewModel.searchRecipesApi(query, pageNumber);
     }
 
     @Override
     public void onRecipeClick(int position) {
         Intent intent = new Intent(this, RecipeActivity.class);
-        intent.putExtra(RECIPE_KEY, adapter.getSelectedRecipe(position));
+        intent.putExtra("recipe", mAdapter.getSelectedRecipe(position));
         startActivity(intent);
     }
 
     @Override
     public void onCategoryClick(String category) {
-        adapter.displayLoading();
-        searchRecipesApi(category, 1);
-        searchView.clearFocus();
+        searchRecipesApi(category);
     }
 
     private void displaySearchCategories(){
-        recipeListViewModel.setViewingRecipes(false);
-        adapter.displaySearchCategories();
+        mAdapter.displaySearchCategories();
     }
+
 
     @Override
     public void onBackPressed() {
-        if(recipeListViewModel.onBackPressed()) {
+        if(mRecipeListViewModel.getViewstate().getValue() == RecipeListViewModel.ViewState.CATEGORIES){
             super.onBackPressed();
-        }else{
-            displaySearchCategories();
+        }
+        else{
+            mRecipeListViewModel.cancelSearchRequest();
+            mRecipeListViewModel.setViewCategories();
         }
     }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        if(item.getItemId() == R.id.action_categories){
-            displaySearchCategories();
-        }
-
-        return super.onOptionsItemSelected(item);
-
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.recipe_search_menu, menu);
-        return true;
-
-    }
-
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

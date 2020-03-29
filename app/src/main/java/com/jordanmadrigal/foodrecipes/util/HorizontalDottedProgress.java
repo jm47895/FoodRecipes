@@ -1,7 +1,8 @@
-package com.jordanmadrigal.foodrecipes.utils;
+package com.jordanmadrigal.foodrecipes.util;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -9,8 +10,6 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.Transformation;
-
-import com.jordanmadrigal.foodrecipes.R;
 
 public class HorizontalDottedProgress extends View {
 
@@ -46,7 +45,7 @@ public class HorizontalDottedProgress extends View {
         Paint paint = new Paint();
 
         //set the color for the dot that you want to draw
-        paint.setColor(getResources().getColor(R.color.colorAccent));
+        paint.setColor(Color.parseColor("#fd583f"));
 
         //function to create dot
         createDot(canvas,paint);
@@ -126,7 +125,7 @@ public class HorizontalDottedProgress extends View {
         @Override
         protected void applyTransformation(float interpolatedTime, Transformation t) {
             super.applyTransformation(interpolatedTime, t);
-            //call invalidate to redraw your view again.
+            //call invalidate to redraw your view againg.
             invalidate();
         }
     }

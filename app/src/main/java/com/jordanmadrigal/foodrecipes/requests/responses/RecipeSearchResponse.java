@@ -1,8 +1,11 @@
 package com.jordanmadrigal.foodrecipes.requests.responses;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import com.jordanmadrigal.foodrecipes.models.Recipe;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import com.jordanmadrigal.foodrecipes.models.Recipe;
 
 import java.util.List;
 
@@ -16,10 +19,19 @@ public class RecipeSearchResponse {
     @Expose()
     private List<Recipe> recipes;
 
+    @SerializedName("error")
+    @Expose()
+    private String error;
+
+    public String getError() {
+        return error;
+    }
+
     public int getCount() {
         return count;
     }
 
+    @Nullable
     public List<Recipe> getRecipes() {
         return recipes;
     }
@@ -29,6 +41,7 @@ public class RecipeSearchResponse {
         return "RecipeSearchResponse{" +
                 "count=" + count +
                 ", recipes=" + recipes +
+                ", error='" + error + '\'' +
                 '}';
     }
 }
